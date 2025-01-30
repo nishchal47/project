@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADV_FSP Functional Specification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+        }
+        h1{
+            color: #FF5733;
+        }
+        h2{
+            color: #33A1FF;;
+        }   
+        h3{
+            color: #4CAF50;
+        }    
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f4f4f4;
+        }
+        sub {
+            font-size: 0.3em; /* Adjusts the size to 70% of the normal font size */
+        }
+    </style>
+</head>
+<body>
+    <h1>Functional Specification (ADV_FSP)<a href="https://www.commoncriteriaportal.org/files/ccfiles/CC2022PART3R1.pdf" target="_blank"><sub>section 10.3, CC2022PART3R1</sub></a></h1>
+    <h2>Objectives</h2>
+    <p>
+        This family levies requirements upon the functional specification, which describes the TSF interfaces (TSFIs). The TSFI consists of all means by which external entities (or subjects in the TOE but outside of the TSF) supply data to the TSF, receive data from the TSF or invoke services from the TSF. It does not describe how the TSF processes those service requests, nor does it describe the communication when the TSF invokes services from its operational environment; this information is addressed by the TOE design (ADV_TDS) and Reliance of dependent component (ACO_REL) families, respectively.
+    </p>
+    <p>
+        This family provides assurance directly by allowing the evaluator to understand how the TSF meets the claimed SFRs. It also provides assurance indirectly, as input to other assurance families and classes:
+    </p>
+    <ul>
+        <li><strong>ADV_ARC</strong>: Description of the TSFIs may be used to gain better understanding of how the TSF is protected against corruption (e.g., subversion of self-protection or domain separation) and/or bypass.</li>
+        <li><strong>ATE</strong>: Description of the TSFIs is an important input for both developer and evaluator testing.</li>
+        <li><strong>AVA</strong>: Description of the TSFIs is used to search for vulnerabilities.</li>
+    </ul>
+    <h2>Component Levelling</h2>
+    <p>
+        The components in this family are levelled on the degree of detail required of the description of the TSFIs, and the degree of formalism required of the description of the TSFIs.
+    </p>
+    <h2>Application Notes</h2>
+    <h3>General</h3>
+    <p>
+        Once the TSFIs are determined (see A.2.2 for guidance and examples of determining TSFI), they are described. At lower-level components, developers focus their documentation (and evaluators focus their analysis) on the more security-relevant aspects of the TOE.Three categories of TSFIs are defined, based upon the relevance the services available through them have to the SFRs being claimed: 
+    </p>
+        <ul style="list-style-type: none; padding: 0;">
+            <li style="display: inline-block; margin-right: 10px;">— If a service available through an interface can be traced to one of the SFRs levied on the TSF, then that interface is termed <strong>SFR-enforcing</strong>. Note that it is possible that an interface may have various services and results, some of which may be SFR-enforcing and some of which may not. </li>
+            <li style="display: inline-block; margin-right: 10px;">— Interfaces to (or services available through an interface relating to) services that SFRenforcing functionality depend upon, but need only to function correctly in order for the security policies of the TOE to be preserved, are termed <strong>SFR-supporting</strong>.  </li>
+            <li style="display: inline-block;">— Interfaces to services on which SFR-enforcing functionality has no dependence are termed <strong>SFR non-interfering</strong>.  </li>
+        </ul>
+    <p>
+        It should be noted that in order for an interface to be SFR-supporting or SFR non-interfering it must have no SFR-enforcing services or results. In contrast, an SFR-enforcing interface may have SFR-supporting services (for example, the ability to set the system clock may be an SFR-enforcing service of an interface, but if that same interface is used to display the system date that service may be only SFR-supporting). An example of a purely SFR-supporting interface is a system call interface that is used both by users and by a portion of the TSF that is running on behalf of users.
+    </p>
+
+    <p>
+        As more information about the TSFIs becomes available, the greater the assurance that can be gained that the interfaces are correctly categorised/analysed. The requirements are structured such that, at the lowest level, the information required for SFR non-interfering interfaces is the minimum necessary in order for the evaluator to make this determination in an effective manner. At higher levels, more information becomes available so that the evaluator has greater confidence in the designation. 
+    </p>
+
+    <p>
+        The purpose in defining these labels (SFR-enforcing, SFR-supporting, and SFR-non-interfering) and for levying different requirements upon each (at the lower assurance components) is to provide a first approximation of where to focus the analysis and the evidence upon which that analysis is performed. If the developer's documentation of the TSF interfaces describes all of the interfaces to the degree specified in the requirements for the SFR-enforcing interfaces (i.e. if the documentation exceeds the requirements), there is no need for the developer to create new evidence to match the requirements. Similarly, because the labels are merely a means of differentiating the interface types within the requirements, there is no need for the developer to update the evidence solely to label the interfaces as SFR-enforcing, SFR-supporting, and SFR-noninterfering. The primary purpose of this labelling is to allow developers with less mature development methodologies (and associated artefacts, such as detailed interface and design documentation) to provide only the necessary evidence without undue cost. 
+    </p>
+    <h3>Detail About the Interfaces</h3>
+    <p>
+        The requirements define collections of details about TSFI to be provided. Interfaces are specified (in varying degrees of detail) in terms of their purpose, method of use, parameters, parameter descriptions, and error messages.
+    </p>
+    <ul>
+        <li>The <strong>Purpose</strong> of an interface is a high-level description of the general goal of the interface (e.g. process GUI commands, receive network packets, provide printer output, etc.).</li>
+        <li>The interface's <strong>Method of Use</strong> describes how the interface is supposed to be used. This description should be built around the various interactions available at that interface. For instance, if the interface were a Unix command shell, ls, mv and cp would be interactions for that interface. For each interaction the method of use describes what the interaction does, both for behaviour seen at the interface (e.g. the programmer calling the API, the Windows users changing a setting in the registry, etc.) as well as behaviour at other interfaces (e.g. generating an audit record).</li>
+        <li><strong>Parameters</strong> are explicit inputs to and outputs from an interface that control the behaviour of that interface. For example, parameters are the arguments supplied to an API; the various fields in a packet for a given network protocol; the individual key values in the Windows Registry; the signals across a set of pins on a chip; the flags that can be set for the ls, etc. The parameters are “identified” with a simple list of what they are. </li>
+        <li>A <strong>parameter description </strong> tells what the parameter is in some meaningful way. For instance, an acceptable parameter description for interface foo(i) would be “parameter i is an integer that indicates the number of users currently logged in to the system”. A description such as “parameter i is an integer” is not an acceptable.</li>
+        <li>The description of an interface's <strong>action </strong> describes what the interface does. This is more detailed than the purpose in that, while the “purpose” reveals why one might want to use it, the “actions” reveals everything that it does. These actions can be related to the SFRs or not. In cases where the interface's action is not related to SFRs, its description is said to be summarized, meaning the description merely makes clear that it is indeed not SFR-related. </li>
+        <li>The <strong>error message description </strong>identifies the condition that generated it, what the message is, and the meaning of any error codes. An error message is generated by the TSF to signify that a problem or irregularity of some degree has been encountered. The requirements in this family refer to different kinds of error messages: </li>
+        <ul style="list-style-type: none; padding: 0;">
+            <li style="display: inline-block; margin-right: 10px;">— a “direct” error message is a security-relevant response through a specific TSFI invocation. </li>
+            <li style="display: inline-block; margin-right: 10px;">— an “indirect” error cannot be tied to a specific TSFI invocation because it results from systemwide conditions (e.g. resource exhaustion, connectivity interruptions, etc.). Error messages that are not security-relevant are also considered “indirect”. </li>
+            <li style="display: inline-block;">— “remaining” errors are any other errors, such as those that can be referenced within the code. For example, the use of condition-checking code that checks for conditions that would not logically occur (e.g. a final “else” after a list of “case” statements), would provide for generating a catch-all error message; in an operational TOE, these error messages should never be seen. </li>
+        </ul>
+
+    </ul>
+    <h3>Components of This Family</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Level</th>
+                <th>Description</th>
+                <th>Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>ADV_FSP.1</td>
+                <td>Basic functional specification</td>
+                <td>the only documentation required is a characterization of all TSFIs and a high-level description of SFR-enforcing and SFR-supporting TSFIs. To provide some assurance that the “important” aspects of the TSF have been correctly characterized at the TSFIs, the developer is required to provide the purpose and method of use, parameters for the SFR-enforcing and SFR-supporting TSFIs. </td>
+            </tr>
+            <tr>
+                <td>ADV_FSP.2</td>
+                <td>Security-enforcing functional specification.</td>
+                <td> the developer is required to provide the purpose, method of use, parameters, and parameter descriptions for all TSFIs. Additionally, for the SFR-enforcing TSFIs the developer shall describe the SFR-enforcing actions and direct error messages.  </td>
+            </tr>
+            <tr>
+                <td>ADV_FSP.3</td>
+                <td>Functional specification with complete summary.</td>
+                <td> the developer must now, in addition to the information required at ADV_FSP.2, provide enough information about the SFRsupporting and SFR-non-interfering actions to show that they are not SFR-enforcing. Further, the developer must now document all of the direct error messages resulting from the invocation of SFR-enforcing TSFIs.  </td>
+            </tr>
+            <tr>
+                <td>ADV_FSP.4</td>
+                <td>Complete functional specification.</td>
+                <td> all TSFIs, whether SFR-enforcing, SFRsupporting or SFR-non-interfering, must be described to the same degree, including all of the direct error messages.  </td>
+            </tr>
+            <tr>
+                <td>ADV_FSP.5</td>
+                <td>Complete semi-formal functional specification with additional error information.</td>
+                <td> the TSFIs descriptions also include error messages that do not result from an invocation of a TSFI.   </td>
+            </tr>
+            <tr>
+                <td>ADV_FSP.6</td>
+                <td>Complete semi-formal functional specification with additional formal specification.</td>
+                <td> in addition to the information required by ADV_FSP.5, all remaining error messages are included. The developer must also provide a formal description of the TSFI. This provides an alternative view of the TSFI that may expose inconsistencies or incomplete specification.  </td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>

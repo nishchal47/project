@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Work Units for {{ actn }}</title>
+</head>
+<body>
+    <div class="header">
+        <div class="welcome-message">Work Unit Details</div>
+        <div class="user-profile">
+            <span>Project ID: {{ project_id }}</span> |
+            <span>Project Name: {{ project_name }}</span>
+            <img src="{{ url_for('static', filename='images/default.png') }}" alt="User Image">
+            <button onclick="location.href='{{ url_for('dashboard') }}'">Dashboard</button>
+            <button onclick="location.href='{{ url_for('logout') }}'">Logout</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="navigation">
+            <button onclick="location.href='{{ url_for('evaluation_page', project_id=project_id) }}'">
+                Back to Evaluation Page
+            </button>
+        </div>
+
+        <div class="content">
+            <div class="header-row">
+                <h2>Work Units for {{ actn }}</h2>
+            </div>
+            
+            <!-- Updated Table -->
+            <table border="1" style="width: 100%; margin-bottom: 20px;">
+                <thead>
+                    <tr>
+                        <th>Work Unit Name</th>
+                        <th>Status</th>
+                        <th>Last Updated By</th>
+                        <th>Last Modified On</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for work_unit in work_units %}
+                        <tr>
+                            <td>
+                                <!-- Form for POST method -->
+                                <form action="{{ url_for('view_work_unit') }}" method="POST" id="work-units-form"style="display: inline;">
+                                    <input type="hidden" name="work_unit_id" value="{{ work_unit['work_unit_id'] }}">
+                                    <input type="hidden" name="project_id" value="{{ project_id }}"> <!-- Pass project_id -->
+                                    <a href="#" onclick="document.getElementById('work-units-form').submit();">
+                                        {{ work_unit['work_unit_name'] }}
+                                    </a>
+                                </form>
+                            </td>
+                            <td>
+                                <span class="{% if work_unit['status'] == 'Pass' %}status-completed{% 
+                                                elif work_unit['status'] == 'Inconclusive' %}status-not-started{% 
+                                                elif work_unit['status'] == 'Fail' %}status-failed{% endif %}">
+                                    {{ work_unit['status'] }}
+                                </span>
+                            </td>
+                            <td>{{ work_unit['last_updated_by'] }}</td>
+                            <td>{{ work_unit['last_modified_on'] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
+>

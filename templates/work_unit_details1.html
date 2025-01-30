@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Work Units for {{ actn }}</title>
+    <script src="static/js/ckeditor/ckeditor.js"></script>
+
+
+</head>
+<body>
+    <div class="header">
+        <div class="welcome-message">Work Unit Details</div>
+        <div class="user-profile">
+            <span>Project ID: {{ project_id }}</span> |
+            <span>Project Name: {{ project_name }}</span>
+            <img src="{{ url_for('static', filename='images/default.png') }}" alt="User Image">
+            <button onclick="location.href='{{ url_for('dashboard') }}'">Dashboard</button>
+            <button onclick="location.href='{{ url_for('logout') }}'">Logout</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="navigation">
+            <button onclick="location.href='{{ url_for('evaluation_page', project_id=project_id) }}'">
+                Back to Evaluation Page
+            </button>
+        </div>
+        <div class="content">
+
+            <div class="header-row">
+            <h2>{{ work_unit['work_unit_name'] }} Description</h2>
+            </div>
+            <p>{{ work_unit['description']|safe }}</p>
+            <form method="POST">
+                <table style="border-collapse: collapse; width: 100%; margin-top: 20px;">
+                    <colgroup>
+                        <col style="width: 40%;"> <!-- 2 parts -->
+                        <col style="width: 60%;"> <!-- 3 parts -->
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th style=" border: 1px solid black; padding: 10px; text-align: left;">Subject</th>
+                            <th style=" border: 1px solid black; padding: 10px; text-align: left;">Evaluator Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subj in work_unit_subjects %}
+                        <tr>
+                            <td style=" border: 1px solid black; padding: 10px; text-align: left;">{{ subj['subject']|safe}}</td>
+                            <td style=" border: 1px solid black; padding: 10px; text-align: left;">
+                                <textarea id="editor{{ loop.index }}" name="editor{{ loop.index }}" rows="4" cols="50" style = "width: 100%; height: 40px; resize: none; transition: height 0.3s ease;" onfocus="this.style.height='100px'" onblur="this.style.height='auto'">
+                                </textarea>
+                                
+
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <br>
+                <button type="submit" style="margin-top: 20px; padding: 10px 20px; background-color: #4CAF50;  color: white; border: none; cursor: pointer;">Save Comments</button>
+            </form>
+            <script>
+                {% for subj in work_unit_subjects %}
+                CKEDITOR.replace('editor{{ loop.index }}');
+
+                
+                {% endfor %}
+            </script>
+
+            <br>
+            
+
+            <script>
+                // Handle textarea focus/blur for dynamic resizing
+                document.querySelectorAll("textarea").forEach(function(textarea) {
+                    textarea.addEventListener("focus", function() {
+                        this.style.height = "100px"; // Expand on focus
+                    });
+
+                    textarea.addEventListener("blur", function() {
+                        this.style.height = "40px"; // Shrink back on blur
+                    });
+                });
+            </script>
+
+        </div>
+    </div>
+</body>
+</html>

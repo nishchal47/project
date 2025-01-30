@@ -1,0 +1,184 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f8f9fa; /* Light background for the main body */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background: linear-gradient(to right, #4facfe, #00f2fe); /* Gradient background */
+    color: white;
+    border-bottom: 1px solid #ccc;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    height: 60px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.welcome-message {
+    font-size: 1.5em;
+    font-weight: bold;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-profile img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white; /* White border for contrast */
+}
+
+.main-container {
+    display: flex;
+    margin-top: 60px; /* Account for header height */
+    height: calc(100vh - 60px); /* Full height minus header height */
+}
+
+.navigation {
+    width: 200px;
+    background: linear-gradient(to bottom, #3a6186, #89253e); /* Vertical gradient */
+    height: 100%;
+    padding-top: 20px;
+    box-sizing: border-box;
+    color: white;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+}
+
+.navigation button {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    background: transparent;
+    color: white;
+    font-size: 1em;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background 0.3s ease;
+}
+
+.navigation button:hover {
+    background: rgba(255, 255, 255, 0.2); /* Light hover effect */
+}
+
+.content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* Submenu styles */
+#project-submenu button {
+    display: block;
+    width: 90%;
+    padding: 10px;
+    margin: 5px 0;
+    border: none;
+    background: rgba(255, 255, 255, 0.1); /* Subtle background for submenu items */
+    color: white;
+    font-size: 0.9em;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+#project-submenu button:hover {
+    background: rgba(255, 255, 255, 0.2); /* Highlight on hover */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: left;
+}
+
+table th, table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+}
+
+table th {
+    background-color: #f4f4f4;
+    font-weight: bold;
+}
+
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+}
+.highlight {
+    background-color: #c2f0c2; /* Light green background */
+    font-weight: bold;
+}
+/* Style for the header row */
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* Space below the header */
+}
+
+.action-btn {
+    background-color: #4CAF50; /* Green background */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px;
+}
+
+
+.status-completed {
+    color: green;
+    font-weight: bold;
+}
+
+.status-not-started {
+    color: orange;
+    font-weight: bold;
+}
+
+.status-failed {
+    color: red;
+    font-weight: bold;
+}
+
+.status-completedE {
+    background-color: green;
+    font-weight: bold;
+}
+
+.status-not-startedE {
+    background-color: orange;
+    font-weight: bold;
+}
+
+.status-failedE {
+    background-color: red;
+    font-weight: bold;
+}

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Evaluation Details - {{ CLASS }} {{ component }}</title>
+</head>
+<body>
+    <div class="header">
+        <div class="welcome-message">Evaluation Details</div>
+        <div class="user-profile">
+            <span>Project ID: {{ project_id }}</span>
+            <img src="{{ url_for('static', filename='images/default.png') }}" alt="User Image">
+            <button onclick="location.href='{{ url_for('dashboard') }}'">Dashboard</button>
+            <button onclick="location.href='{{ url_for('logout') }}'">Logout</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="navigation">
+            <button onclick="location.href='{{ url_for('evaluation_page', project_id=project_id) }}'">
+                Back to Evaluation Page
+            </button>
+        </div>
+        <div class="content">
+            <div class="header-row">
+                <h2>Evaluation of sub-activity({{ component }})</h2>
+                
+                <!-- Form for Evaluator Action 1 -->
+                <form action="{{ url_for('fetch_work_units') }}" method="POST" id="form-actn1">
+                    <input type="hidden" name="actn" value="{{ action1 }}">
+                    <input type="hidden" name="project_id" value="{{ project_id }}">
+                    <button 
+                      type="submit" 
+                      class="action-btn 
+                        {% if overall_status_actn1 == 'Pass' %}status-completedE{% elif overall_status_actn1 == 'Inconclusive' %}status-not-startedE{% elif overall_status_actn1 == 'Fail' %}status-failedE{% endif %}">
+                      Evaluator Action {{ action1 }}
+                    </button>
+                </form>
+
+                <!-- Form for Evaluator Action 2 -->
+                <form action="{{ url_for('fetch_work_units') }}" method="POST" id="form-actn2">
+                    <input type="hidden" name="actn" value="{{ action2 }}">
+                    <input type="hidden" name="project_id" value="{{ project_id }}">
+                    <button 
+                      type="submit" 
+                      class="action-btn 
+                        {% if overall_status_actn2 == 'Pass' %}status-completedE{% elif overall_status_actn2 == 'Inconclusive' %}status-not-startedE{% elif overall_status_actn2 == 'Fail' %}status-failedE{% endif %}">
+                      Evaluator Action {{ action2 }}
+                    </button>
+                </form>
+
+            </div>
+            <h3>Objectives:</h3>
+            <p>{{ objectives }}</p>
+            <h3>Input:</h3>
+            <p>{{ input|safe }}</p>
+            <h3>Application Notes:</h3>
+            <p>{{ application_notes|safe }}</p>
+
+        </div>
+    </div>
+</body>
+</html>

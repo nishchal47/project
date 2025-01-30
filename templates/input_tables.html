@@ -1,0 +1,22 @@
+        <!-- Input Documents Section -->
+        <h2>Input Documents</h2>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>Document Type</th>
+                    <th>Document Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doc in input_documents %}
+                    <tr>
+                        <td>{{ doc['document_type'] }}</td>
+                        <td>
+                            <a href="{{ doc['document_url'] }}" target="_blank">
+                                {{ doc['document_name'] }}
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>

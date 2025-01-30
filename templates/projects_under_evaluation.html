@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Projects Under Evaluation</title>
+</head>
+<body>
+    <div class="header">
+        <div class="welcome-message">Projects Under Evaluation</div>
+        <div class="user-profile">
+            <img src="{{ url_for('static', filename='images/default.png') }}" alt="User Image">
+            <button onclick="location.href='{{ url_for('dashboard') }}'">Dashboard</button>
+            <button onclick="location.href='{{ url_for('logout') }}'">Logout</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="navigation">
+            <button onclick="location.href='{{ url_for('dashboard') }}'">Back to Dashboard</button>
+        </div>
+        <div class="content">
+            <h2>Your Projects Under Evaluation</h2>
+            {% if projects %}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Project ID</th>
+                            <th>Project Name</th>
+                            <th>Evaluation Assurance Level (EAL)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in projects %}
+                        <tr>
+                            <td>{{ project.project_id }}</td>
+                            <td>{{ project.project_name }}</td>
+                            <td>{{ project.EAL }}</td>
+                            <td>  
+                                <!-- Link to the evaluation page -->
+                                <a href="{{ url_for('evaluation_page', project_id=project.project_id) }}">
+                                    <img src="{{ url_for('static', filename='images/click_icon.png') }}" 
+                                         alt="Click to Continue" 
+                                         title="Click to Continue Evaluation"
+                                         style="width: 20px; height: 20px; cursor: pointer;">
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No projects under evaluation.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

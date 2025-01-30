@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Development Overview</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <div class="header">
+        <h1>Development Overview</h1>
+    </div>
+    <div class="content">
+        <table border="1" cellspacing="0" cellpadding="5">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Description</th>
+                    <th>Evidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in development_data %}
+                    <tr>
+                        <td>{{ item['component'] }}</td>
+                        <td>{{ item['description'] }}</td>
+                        <td>
+                            <a href="{{ item['evidence_url'] }}" target="_blank">Download Evidence</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

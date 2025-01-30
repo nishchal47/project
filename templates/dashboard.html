@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <title>Dashboard</title>
+    <script>
+        function toggleSubMenu() {
+            const submenu = document.getElementById('project-submenu');
+            submenu.style.display = submenu.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Flash Messages Section -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    <!-- Header Section -->
+    <div class="header">
+        <div class="welcome-message">
+            Welcome, {{ user.name }}
+        </div>
+        <div class="user-profile">
+            <img src="{{ url_for('static', filename='images/' + user.image) }}" alt="User Image">
+            <button onclick="location.href='#'">Profile</button>
+            <form action="{{ url_for('update_image') }}" method="POST" enctype="multipart/form-data">
+                <input type="file" name="image">
+                <button type="submit">Settings</button>
+            </form>
+            <button onclick="location.href='{{ url_for('logout') }}'">Logout</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Navigation Pane -->
+        <div class="navigation">
+            <button onclick="toggleSubMenu()">Projects</button>
+            <!-- Submenu -->
+            <div id="project-submenu" style="display: none; padding-left: 10px;">
+                <button onclick="location.href='#'">New Projects</button>
+                <button onclick="location.href='{{ url_for('projects_under_evaluation') }}'">Project Under Evaluation</button>
+
+                <button onclick="location.href='#'">Project Completed for Evaluation</button>
+            </div>
+        </div>
+
+        <!-- Content Section -->
+        <div class="content">
+            <!-- Content goes here -->
+            <h2>Welcome to your dashboard!</h2>
+            <p>Here, you can manage your projects and profile settings.</p>
+        </div>
+    </div>
+</body>
+</html>
