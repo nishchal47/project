@@ -6,9 +6,34 @@ from sqlalchemy.engine.url import URL
 from sqlalchemy import Enum
 from datetime import datetime
 from flask_migrate import Migrate
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+from urllib.parse import urlparse, urljoin
+from flask import Flask, request, jsonify, render_template_string, session
+
+import bcrypt
+import tkinter as tk
+from tkinter import messagebox
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
+from cryptography import x509
+from cryptography.hazmat.primitives import serialization
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.serialization import load_pem_public_key
+import os
+import hashlib
+import base64
+
+import PyKCS11
+import PyKCS11.LowLevel as L
+from cryptography.hazmat.backends import default_backend
+
+# Required by Flask-Login
+def get_id(self):
+    return str(self.user_id)
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
+
 
 # Configure the MySQL database
 app.config['SQLALCHEMY_DATABASE_URI'] = URL.create(
@@ -22,9 +47,18 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return db.session.get(User, int(user_id))  # Fetch user from DB
+
+migrate = Migrate(app, db)
 
 # Users Table
-class User(db.Model):
+class User(db.Model, UserMixin):
     __tablename__ = 'Users'
     user_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
@@ -33,6 +67,10 @@ class User(db.Model):
     certificates = db.Column(db.Text)
 
     projects = db.relationship('UsersProjects', back_populates='user')
+    work_unit_statuses = db.relationship('WorkUnitStatus', back_populates='user')  # ✅ Added
+    # Required by Flask-Login
+    def get_id(self):
+        return str(self.user_id)
 
 
 class EAL(db.Model):
@@ -58,6 +96,7 @@ class Project(db.Model):
     project_evaluations = db.relationship('ProjectEvaluation', back_populates='project')  # New Relationship
     evaluator_action_statuses = db.relationship('EvaluatorActionStatus', back_populates='project')
     work_unit_statuses = db.relationship('WorkUnitStatus', back_populates='project')
+    subject_values = db.relationship('SubjectValue', back_populates='project')
 
 
 # Users_Projects Table (Many-to-Many Relationship)
@@ -123,7 +162,7 @@ class EvaluatorAction(db.Model):
     # Relationships
     evaluation_component = db.relationship('EvaluationComponent', back_populates='evaluator_actions')
     evaluator_action_statuses = db.relationship('EvaluatorActionStatus', back_populates='evaluator_action')
-
+    work_units = db.relationship('WorkUnit', back_populates='evaluator_action')
 
 class EvaluatorActionStatus(db.Model):
     __tablename__ = 'EvaluatorActionStatuses'
@@ -195,40 +234,158 @@ class SubjectValue(db.Model):
     project = db.relationship('Project', back_populates='subject_values')
 
 
-# Authentication decorator
-def authenticate(func):
-    def wrapper(*args, **kwargs):
-        if 'user_id' not in session:
-            flash("You need to log in first.", "error")
-            return redirect(url_for('login'))
-        return func(*args, **kwargs)
 
-    wrapper.__name__ = func.__name__  # Preserve the function name for Flask routing
-    return wrapper
-
-
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ("http", "https") and ref_url.netloc == test_url.netloc
 # Mock login route
+
+def get_certificate_from_db(username):
+    """Retrieve the certificate from the MySQL database for a given username."""
+    certificate_data = User.query.filter_by(username=username).first()
+    print(certificate_data)
+
+    if certificate_data:
+        print(certificate_data.certificates)
+        return certificate_data.certificates
+    else:
+        raise ValueError("Certificate not found for user:", username)
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        # Simulating a successful login (user_id = 1 for demo purposes)
-        session['user_id'] = 1
-        session['username'] = 'John Doe'
-        flash("Login successful!", "success")
-        return redirect(url_for('dashboard'))
+        data = request.get_json()
+
+        username = data.get('username')
+        role = data.get('role')
+        password = data.get('password')
+        user = User.query.filter_by(username=username).first()
+        def verify_user_password(stored_password, entered_password):
+            # Split the stored password into salt and hashed password parts
+            salt_hex, hashed_password_hex = stored_password.split(':')
+
+            # Convert hex values back to bytes
+            salt = bytes.fromhex(salt_hex)
+            stored_hashed_password = bytes.fromhex(hashed_password_hex)
+
+            # Check if the entered password matches the stored hash
+            if bcrypt.checkpw(entered_password.encode('utf-8'), stored_hashed_password):
+                return True
+            else:
+                return False
+
+                # Check if user exists
+        if user and user.role == role:
+                    # Check if the provided password matches the stored hashed password
+            if verify_user_password(user.password_hash, password):  # password is the user-entered password
+                login_user(user)  # Log in the user
+
+                next_page = request.args.get('next')  # Get the 'next' parameter
+                if not next_page or not is_safe_url(next_page):  # Ensure it's a safe URL
+                    next_page = url_for('welcome_page')  # Default redirect
+                return jsonify({"status": "success",  "redirect_url": next_page}), 200
+            else:
+                return jsonify({'message': 'Invalid password!'}), 401
+        else:
+            return jsonify({'message': 'Invalid username or role!'}), 401
+
+
+
     return render_template('login.html')
 
 
+@app.route('/get_challenge', methods=['GET'])
+def get_challenge():
+    challenge = os.urandom(32)  # Create a 32-byte random challenge
+    session['challenge'] = challenge.hex()  # Store the challenge in the session
+    # print("Challenge set in session:", session['challenge'])  # Debug: log the challenge
+    return jsonify({"challenge": challenge.hex()})  # Return challenge as a hex string
+
+
+@app.route('/verify_signature', methods=['POST'])
+def verify_signature():
+    data = request.json
+    # print("recieved data:", data)
+    username = data.get("username")
+    role = data.get("role", "").upper()
+
+    signed_challenge = bytes.fromhex(data['signed_challenge'])
+    # print(signed_challenge)
+    # print("Length of byte_data:", len(signed_challenge))
+    # encoded_data = base64.urlsafe_b64encode(signed_challenge).decode('utf-8')
+    # print("Encoded data (base64url):", encoded_data)
+    # Retrieve the challenge from the session
+    challenge_hex = session.get('challenge')
+    if not challenge_hex:
+        print("No challenge found in session")  # Debugging statement
+        return jsonify({"message": "Challenge not found in session."}), 400
+
+    # Convert challenge from hex to bytes
+    challenge = bytes.fromhex(challenge_hex)
+    print(challenge)
+    message_digest = hashlib.sha256(challenge_hex.encode()).digest()
+    print(f"Message digest created: {message_digest.hex()}")
+    if isinstance(message_digest, bytes):
+        print("The variable is of type 'bytes'.")
+    # username = 'nitesh'  # Normally you'd get this from the request
+
+    # Retrieve and load the certificate
+    try:
+        user = User.query.filter_by(username=username).first()
+        if user and user.role == role:
+            try:
+                certificate_data = get_certificate_from_db(username)
+                print("Raw Certificate Data:", certificate_data)
+                public_key = b''.join(line.encode('utf-8') for line in certificate_data.splitlines())
+
+                print(public_key)
+
+                public_key_obj = serialization.load_pem_public_key(public_key, backend=default_backend())
+
+                # Verify the signature
+                public_key_obj.verify(
+                    signed_challenge,
+                    message_digest,
+                    padding.PKCS1v15(),
+                    hashes.SHA256()
+                )
+                print("Signature verification successful.")
+                login_user(user)  # Log in the user
+
+                next_page = request.args.get('next')  # Get the 'next' parameter
+                if not next_page or not is_safe_url(next_page):  # Ensure it's a safe URL
+                    next_page = url_for('welcome_page')  # Default redirect
+                return jsonify({"status": "success", "redirect_url": next_page}), 200
+            except InvalidSignature:
+                return jsonify({"message": "Signature is invalid."}), 400
+            except ValueError as e:
+                return jsonify({"message": str(e)}), 404
+            except Exception as e:
+                return jsonify({"message": "An error occurred: " + str(e)}), 500
+        else:
+            return jsonify({'status': 'Invalid username or role!'}), 401
+    finally:
+        print("all ok")
+
+
+
+
+
+@app.route('/welcome')
+@login_required
+def welcome_page():
+    return render_template('welcome.html', username=current_user.username)
+
 # Dashboard route (protected)
 @app.route('/dashboard')
-@authenticate
+@login_required
 def dashboard():
     return render_template('dashboard.html', user={'name': session['username'], 'image': 'default.png'})
 
 
 # Projects under evaluation route (protected)
 @app.route('/projects/under_evaluation')
-@authenticate
+
 def projects_under_evaluation():
     user_id = session['user_id']
     try:
@@ -274,7 +431,7 @@ def update_image():
 
 
 @app.route('/projects/evaluation/<project_id>')
-@authenticate
+
 def evaluation_page(project_id):
     try:
         # Store the project_id in the session
@@ -315,7 +472,7 @@ def evaluation_page(project_id):
 
 
 @app.route('/evaluation_details/<project_id>/<int:eal>')
-@authenticate
+
 def evaluation_details(project_id, eal):
     try:
         # Query the database for the project details and evaluation details
@@ -349,7 +506,7 @@ def evaluation_details(project_id, eal):
 
 
 @app.route('/evaluation_component', methods=['POST'])
-@authenticate
+
 def evaluation_component():
     # Ensure 'project_id' exists in session
     class_value = request.form.get('CLASS')
@@ -464,7 +621,7 @@ def evaluation_component():
 
 
 @app.route('/fetch_work_units', methods=['POST'])
-@authenticate
+
 def fetch_work_units():
     print("Starting fetch_work_units...")
     actn = request.form.get('actn')
@@ -686,9 +843,4 @@ def save_to_database(comments, evaluation_status, work_unit_id):
 
 
 if __name__ == '__main__':
-    with app.app_context():  # Create database tables before running the app
-
-        db.create_all()  # Recreates tables
-        print("Database tables created successfully!")
-
     app.run(debug=True)  # Start the Flask app
